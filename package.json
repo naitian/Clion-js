@@ -1,0 +1,16 @@
+{
+  "name": "clion",
+  "version": "0.1.0",
+  "description": "A simple command line interface for ion.tjhsst.edu",
+  "main": "clion.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Naitian Zhou",
+  "license": "ISC",
+  "dependencies": {
+    "gitlike-cli": "^0.1.0",
+    "prompt": "^0.2.14",
+    "xmlhttprequest": "^1.8.0"
+  }
+}
