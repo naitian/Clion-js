@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "gitlike-cli": "^0.1.0",
-    "prompt": "^0.2.14",
-    "xmlhttprequest": "^1.8.0"
+    "prompt": "^0.2.14"
   }
 }
