@@ -97,13 +97,13 @@ function ionCall(endpoint, success, fail) {
 			return;
 		}
 
-		eval("var credentials = " + data);
-
-		var request = https.get({
+		https.get({
 			hostname: 'ion.tjhsst.edu',
 			path: `/api${endpoint}`,
-			auth : `${credentials.uname}:${credentials.pword}`,
-			headers: {format: "json"}
+			headers: {
+				Authorization: `Basic ${data}`,
+				format: "json"
+			}
 		}, res => {
 			var body = '';
 			res.on('data', chunk => {body += chunk;});
@@ -178,8 +178,7 @@ function login() {
 		}
 	};
 	prompt.get(schema, (err, result) => {
-		uname = result.username, pword = result.password;
-		fs.writeFile("/var/tmp/clion-auth.json", `{uname: \"${uname}\", pword: \"${pword}\"}`, err => {
+		fs.writeFile("/var/tmp/clion-auth.json", new Buffer(`${result.username}:${result.password}`).toString("base64"), err => {
 			if (err) console.error("Could not write credentials to drive.")
 		});
 		ionCall("/profile/", data => {
