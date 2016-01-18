@@ -89,31 +89,35 @@ program
 		}).parent
 	.parse(process.argv);
 
-function ionCall(endpoint, success, fail) {
-	fs.readFile('/var/tmp/clion-auth.json', 'utf8', (err, data) => {
-		if (err) {
+function ionCall(endpoint, success, fail, authRequired) {
+	authRequired = (typeof authRequired === 'undefined') ? true : authRequired;
+
+	var options = {
+		hostname: 'ion.tjhsst.edu',
+		path: `/api${endpoint}`,
+		headers: {format: "json"}
+	}
+
+	if (authRequired) {
+		if (fs.existsSync('/var/tmp/clion-auth.json')) {
+			var data = fs.readFile('/var/tmp/clion-auth.json', 'utf8');
+			options.headers.Authorization = `Basic ${data}`;
+		} else {
 			console.log("Please login first");
 			//login();
 			return;
 		}
+	}
 
-		https.get({
-			hostname: 'ion.tjhsst.edu',
-			path: `/api${endpoint}`,
-			headers: {
-				Authorization: `Basic ${data}`,
-				format: "json"
-			}
-		}, res => {
-			var body = '';
-			res.on('data', chunk => {body += chunk;});
-			res.on('end', () => {
-				var object = JSON.parse(body);
-				//console.log(object);
-				success(object);
-			});
-		}).on('error', fail);
-	});
+	https.get(options, res => {
+		var body = '';
+		res.on('data', chunk => {body += chunk;});
+		res.on('end', () => {
+			var object = JSON.parse(body);
+			//console.log(object);
+			success(object);
+		});
+	}).on('error', fail);
 }
 
 function profile(args, options) {
@@ -144,7 +148,7 @@ function bell(args, options) {
 		day.day_type.blocks.forEach(block => 
 			console.log(block.name, `(${block.start} - ${block.end})`)
 		);
-	}, e => console.error(e));
+	}, e => console.error(e), false);
 }
 
 function getId(searchTerm, success) {
