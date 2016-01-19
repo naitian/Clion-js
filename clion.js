@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 const VERSION = "0.1.0",
-	  DESCRIPTION = "A command line interface for ion.tjhsst.edu",
-	  WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-	
+	DESCRIPTION = "A command line interface for TJHSST Ion",
+	WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+	AUTHFILE = "clion-auth";
+
 const fs = require('fs'),
-	  program = require('gitlike-cli'),
-	  https = require('https'),
-	  prompt = require('prompt');
+	program = require('gitlike-cli'),
+	https = require('https'),
+	prompt = require('prompt');
 
 prompt.message = prompt.delimiter = "";
 
@@ -22,9 +23,6 @@ program
 				'$ clion login'
 			]);
 		}).parent
-	.version(VERSION)
-	.description(DESCRIPTION)
-	.usage("clion")
 	.command("logout")
 		.description("Remove Login Credentials")
 		.action(logout)
@@ -38,9 +36,9 @@ program
 		.action(profile)
 		.on('help', cmd => {
 			cmd.outputIndented('Examples', [
+				'$ clion profile',
 				'$ clion profile 2018nzhou',
 				'$ clion profile "Naitian Zhou"',
-				'$ clion profile'
 			]);
 		}).parent
 	.command("bell [date]")
@@ -110,8 +108,8 @@ function ionCall(endpoint, success, fail, authRequired) {
 	};
 
 	if (authRequired) {
-		if (fs.statSync('/var/tmp/clion-auth').isFile()) {
-			var data = fs.readFileSync('/var/tmp/clion-auth', 'utf8');
+		if (fs.statSync(AUTHFILE).isFile()) {
+			var data = fs.readFileSync(AUTHFILE, 'utf8');
 			options.headers.Authorization = `Basic ${data}`;
 		} else {
 			console.log("Please login first");
@@ -135,13 +133,13 @@ function profile(args, options) {
 	var name = args.uname || "0000";
 	getId(name, data => {
 		var id = data || "";
-	
+
 		ionCall(`/profile/${id}/`, data => {
 			console.log(data.full_name);
 			console.log(`${data.ion_username} (${data.id})`);
 			var bday = data.birthday || "B-Day not public";
 			var emails = data.emails || ["E-mails not public"];
-			
+
 			console.log("Birthday:", bday.split("T")[0]);
 
 			console.log("Emails:");
@@ -152,11 +150,12 @@ function profile(args, options) {
 
 function bell(args, options) {
 	var date = args.date || "";
+
 	ionCall(`/schedule/${date}`, data => {
 		if (date !== "") day = data;
-		else day = data.results[0]	
+		else day = data.results[0];
 		console.log(day.date, `(${day.day_type.name})`);
-		day.day_type.blocks.forEach(block => 
+		day.day_type.blocks.forEach(block =>
 			console.log(block.name, `(${block.start} - ${block.end})`)
 		);
 	}, console.error, false);
@@ -192,10 +191,12 @@ function login() {
 			}
 		}
 	};
+
 	prompt.get(schema, (err, result) => {
-		fs.writeFile("/var/tmp/clion-auth", new Buffer(`${result.username}:${result.password}`).toString("base64"), err => {
-			if (err) console.error("Could not write credentials to drive.")
+		fs.writeFile(AUTHFILE, new Buffer(`${result.username}:${result.password}`).toString("base64"), err => {
+			if (err) console.error("Could not write credentials to drive.");
 		});
+
 		ionCall("/profile/", data => {
 			console.log("Successful Login");
 			profile({username: ""});
@@ -204,7 +205,7 @@ function login() {
 }
 
 function logout() {
-	fs.unlink("/var/tmp/clion-auth", () => console.log("Successful Logout"));
+	fs.unlink(AUTHFILE, () => console.log("Successful Logout"));
 }
 
 function listBlocks(args, options) {
@@ -239,7 +240,7 @@ function viewActivity(args, options) {
 		console.log();
 
 		console.log("Scheduled on: ");
-		first = true;
+		var first = true;
 		for (var blockKey in data.scheduled_on) {
 			if (first) {
 				var said = data.scheduled_on[blockKey].roster.id;
@@ -253,7 +254,7 @@ function viewActivity(args, options) {
 				console.log(`Signed Up (${data.signups.count}/${data.capacity}): `);
 				data.signups.members.forEach(student => {
 					console.log(`${student.full_name} (${student.username})`);
-				})
+				});
 			}, console.error);
 		}
 	}, e => console.error("Activity does not exist."));
@@ -265,8 +266,8 @@ function listActivities(args, options) {
 	if (block > -1) printActivities(block);
 	else {
 		var today = new Date();
-		ionCall(`/blocks/?start_date=${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`, data => {
-			printActivities(data.results[0].id);	
+		ionCall(`/blocks/?start_date=${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`, data => {
+			printActivities(data.results[0].id);
 		}, console.error);
 	}
 }
@@ -292,6 +293,7 @@ function listEighth(args, options) {
 		date = new Date(),
 		today = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
 	console.log(today);
+
 	ionCall("/signups/user/", data => {
 		data.forEach(block => {
 			if (cpgDates(today, block.block.date)) {
@@ -299,13 +301,13 @@ function listEighth(args, options) {
 					date = new Date(dateAr[0], dateAr[1]-1, dateAr[2]);
 				console.log(`${WEEKDAYS[date.getDay()]} ${data.block_letter} Block  (${data.id})`);
 			}
-		})
+		});
 	}, console.error);
 }
 
 function cpgDates(d1, d2) {
 	var d1Ar = d1.split("-"), d2Ar = d2.split("-");
-	return (parseInt(d1Ar[0]) >= parseInt(d2.Ar[0])) || (parseInt(d1Ar[1]) >= parseInt(d2.Ar[1])) || (parseInt(d1Ar[2]) >= parseInt(d2.Ar[2]));
+	return (parseInt(d1Ar[0]) >= parseInt(d2Ar[0])) || (parseInt(d1Ar[1]) >= parseInt(d2Ar[1])) || (parseInt(d1Ar[2]) >= parseInt(d2Ar[2]));
 }
 
 function signEighth(args, options) {

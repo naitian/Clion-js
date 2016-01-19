@@ -1,7 +1,7 @@
 {
   "name": "clion",
   "version": "0.1.0",
-  "description": "A simple command line interface for ion.tjhsst.edu",
+  "description": "A simple command line interface for TJHSST Ion",
   "main": "clion.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,5 +11,12 @@
   "dependencies": {
     "gitlike-cli": "^0.1.0",
     "prompt": "^0.2.14"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/naitian/Clion"
+  },
+  "bin": {
+    "clion": "clion.js"
   }
 }
