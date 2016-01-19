@@ -22,6 +22,17 @@ program
 				'$ clion login'
 			]);
 		}).parent
+	.version(VERSION)
+	.description(DESCRIPTION)
+	.usage("clion")
+	.command("logout")
+		.description("Remove Login Credentials")
+		.action(logout)
+		.on('help', cmd => {
+			cmd.outputIndented('Examples', [
+				'$ clion logout'
+			]);
+		}).parent
 	.command("profile [uname]")
 		.description("View the profile of an Ion user. (Defaults to logged in user)")
 		.action(profile)
@@ -99,8 +110,8 @@ function ionCall(endpoint, success, fail, authRequired) {
 	};
 
 	if (authRequired) {
-		if (fs.existsSync('/var/tmp/clion-auth.json')) {
-			var data = fs.readFile('/var/tmp/clion-auth.json', 'utf8');
+		if (fs.statSync('/var/tmp/clion-auth').isFile()) {
+			var data = fs.readFileSync('/var/tmp/clion-auth', 'utf8');
 			options.headers.Authorization = `Basic ${data}`;
 		} else {
 			console.log("Please login first");
@@ -182,7 +193,7 @@ function login() {
 		}
 	};
 	prompt.get(schema, (err, result) => {
-		fs.writeFile("/var/tmp/clion-auth.json", new Buffer(`${result.username}:${result.password}`).toString("base64"), err => {
+		fs.writeFile("/var/tmp/clion-auth", new Buffer(`${result.username}:${result.password}`).toString("base64"), err => {
 			if (err) console.error("Could not write credentials to drive.")
 		});
 		ionCall("/profile/", data => {
@@ -190,6 +201,10 @@ function login() {
 			profile({username: ""});
 		}, e => console.error("Login Failed"));
 	});
+}
+
+function logout() {
+	fs.unlink("/var/tmp/clion-auth", () => console.log("Successful Logout"));
 }
 
 function listBlocks(args, options) {
@@ -241,9 +256,7 @@ function viewActivity(args, options) {
 				})
 			}, console.error);
 		}
-	}, e => {
-		if (e == "404") console.error("Activity does not exist.");
-	})
+	}, e => console.error("Activity does not exist."));
 }
 
 function listActivities(args, options) {
