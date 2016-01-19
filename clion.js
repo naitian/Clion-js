@@ -28,7 +28,7 @@ program
 		.on('help', cmd => {
 			cmd.outputIndented('Examples', [
 				'$ clion profile 2018nzhou',
-				'$ clion profile "Naitian Zhou',
+				'$ clion profile "Naitian Zhou"',
 				'$ clion profile'
 			]);
 		}).parent
@@ -96,7 +96,7 @@ function ionCall(endpoint, success, fail, authRequired) {
 		hostname: 'ion.tjhsst.edu',
 		path: `/api${endpoint}`,
 		headers: {format: "json"}
-	}
+	};
 
 	if (authRequired) {
 		if (fs.existsSync('/var/tmp/clion-auth.json')) {
@@ -135,7 +135,7 @@ function profile(args, options) {
 
 			console.log("Emails:");
 			emails.forEach(email => console.log("\t" + email));
-		}, e => console.error(e));
+		}, console.error);
 	});
 }
 
@@ -148,7 +148,7 @@ function bell(args, options) {
 		day.day_type.blocks.forEach(block => 
 			console.log(block.name, `(${block.start} - ${block.end})`)
 		);
-	}, e => console.error(e), false);
+	}, console.error, false);
 }
 
 function getId(searchTerm, success) {
@@ -165,7 +165,7 @@ function getId(searchTerm, success) {
 			console.error("No Such Profile");
 			process.exit();
 		}
-	}, e => console.error(e));
+	}, console.error);
 }
 
 function login() {
@@ -207,7 +207,7 @@ function listBlocks(args, options) {
 			console.log("Locked:", data.results[i].locked);
 			console.log();
 		}
-	}, e => console.error(e));
+	}, console.error);
 }
 
 function viewActivity(args, options) {
@@ -239,7 +239,7 @@ function viewActivity(args, options) {
 				data.signups.members.forEach(student => {
 					console.log(`${student.full_name} (${student.username})`);
 				})
-			}, e => console.error(e));
+			}, console.error);
 		}
 	}, e => {
 		if (e == "404") console.error("Activity does not exist.");
@@ -254,7 +254,7 @@ function listActivities(args, options) {
 		var today = new Date();
 		ionCall(`/blocks/?start_date=${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`, data => {
 			printActivities(data.results[0].id);	
-		}, e => console.error(e));
+		}, console.error);
 	}
 }
 
@@ -269,7 +269,7 @@ function printActivities(bid){
 			console.log(`${act.name_with_flags_for_user} (${akey})`);
 			console.log(`\tSponsors:${act.sponsors}\n\t${act.rooms}`)
 		}
-	}, e => console.error(e));
+	}, console.error);
 }
 
 function listEighth(args, options) {
@@ -283,11 +283,11 @@ function listEighth(args, options) {
 		data.forEach(block => {
 			if (cpgDates(today, block.block.date)) {
 				var dateAr = block.block.date.split("-"),
-					date = new Date(dateAr[0], dateAr[1] - 1, dateAr[2]);
+					date = new Date(dateAr[0], dateAr[1]-1, dateAr[2]);
 				console.log(`${WEEKDAYS[date.getDay()]} ${data.block_letter} Block  (${data.id})`);
 			}
 		})
-	}, e => console.error(e));
+	}, console.error);
 }
 
 function cpgDates(d1, d2) {
