@@ -7,6 +7,7 @@ const VERSION = "0.1.0",
 const fs = require('fs'),
 	program = require('gitlike-cli'),
 	https = require('https'),
+	query = require('querystring')
 	prompt = require('prompt');
 
 prompt.message = prompt.delimiter = "";
@@ -100,7 +101,6 @@ program
 
 function ionCall(endpoint, success, fail, authRequired) {
 	authRequired = (typeof authRequired === 'undefined') ? true : authRequired;
-
 	var options = {
 		hostname: 'ion.tjhsst.edu',
 		path: `/api${endpoint}`,
@@ -172,7 +172,7 @@ function getId(searchTerm, success) {
 		return;
 	}
 
-	ionCall(`/search/${searchTerm}/`, data => {
+	ionCall(`/search/${query.escape(searchTerm)}/`, data => {
 		if (data.count > 0) {
 			var id = data.results[0].id;
 			success(id);
