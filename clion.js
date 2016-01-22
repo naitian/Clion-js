@@ -108,11 +108,16 @@ function ionCall(endpoint, success, fail, authRequired) {
 	};
 
 	if (authRequired) {
-		if (fs.statSync(AUTHFILE).isFile()) {
+		try {
 			var data = fs.readFileSync(AUTHFILE, 'utf8');
 			options.headers.Authorization = `Basic ${data}`;
-		} else {
-			console.log("Please login first");
+		} catch(err) {
+			if(err.code == "ENOENT"){
+				console.log("Please login first");
+			}
+			else {
+				console.error;
+			}
 			//login();
 			return;
 		}
