@@ -103,7 +103,7 @@ function ionCall(endpoint, success, fail, authRequired) {
 	authRequired = (typeof authRequired === 'undefined') ? true : authRequired;
 	var options = {
 		hostname: 'ion.tjhsst.edu',
-		path: `/api${endpoint}`,
+		path: `/api${query.escape(endpoint)}`,
 		headers: {format: "json"}
 	};
 
