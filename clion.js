@@ -103,7 +103,7 @@ function ionCall(endpoint, success, fail, authRequired) {
 	authRequired = (typeof authRequired === 'undefined') ? true : authRequired;
 	var options = {
 		hostname: 'ion.tjhsst.edu',
-		path: `/api${query.escape(endpoint)}`,
+		path: `/api${endpoint}`,
 		headers: {format: "json"}
 	};
 
@@ -171,7 +171,6 @@ function getId(searchTerm, success) {
 		success("");
 		return;
 	}
-
 	ionCall(`/search/${query.escape(searchTerm)}/`, data => {
 		if (data.count > 0) {
 			var id = data.results[0].id;
