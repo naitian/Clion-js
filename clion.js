@@ -99,8 +99,12 @@ program
 		}).parent
 	.parse(process.argv);
 
-function ionCall(endpoint, method, success, fail, authRequired) {
-	authRequired = (typeof authRequired === 'undefined') ? true : authRequired;
+function ionCall(endpoint, success, fail, authRequired, params) {
+
+	if(typeof authRequired === "object") params = authRequired;
+	else authRequired = (typeof authRequired === 'undefined') ? true : authRequired;
+
+	var method = (typeof params === "undefined") ? 'GET' : 'POST';
 
 	if(endpoint.lastIndexOf("/") == endpoint.length - 1){
 		endpoint = endpoint.substring(0, endpoint.length - 1);
@@ -128,6 +132,10 @@ function ionCall(endpoint, method, success, fail, authRequired) {
 		}
 	}
 
+	if(method == 'POST') {
+		options.form = params;
+	}
+
 	request(options, (err, res, body) => {
 		success(body);
 	}).on('error', fail);
@@ -139,7 +147,7 @@ function profile(args, options) {
 	getId(name, data => {
 		var id = data || "";
 
-		ionCall(`/profile/${id}/`, 'GET', data => {
+		ionCall(`/profile/${id}/`, data => {
 			console.log(data.full_name);
 			console.log(`${data.ion_username} (${data.id})`);
 			var bday = data.birthday || "B-Day not public";
@@ -156,7 +164,7 @@ function profile(args, options) {
 function bell(args, options) {
 	var date = args.date || "";
 
-	ionCall(`/schedule/${date}`, 'GET', data => {
+	ionCall(`/schedule/${date}`, data => {
 		if (date !== "") day = data;
 		else day = data.results[0];
 		console.log(day.date, `(${day.day_type.name})`);
@@ -171,7 +179,7 @@ function getId(searchTerm, success) {
 		success("");
 		return;
 	}
-	ionCall(`/search/${query.escape(searchTerm)}/`, 'GET', data => {
+	ionCall(`/search/${query.escape(searchTerm)}/`, data => {
 		if (data.count > 0) {
 			var id = data.results[0].id;
 			console.log(id);
@@ -202,7 +210,7 @@ function login() {
 			if (err) console.error("Could not write credentials to drive.");
 		});
 
-		ionCall("/profile/", 'GET', data => {
+		ionCall("/profile/", data => {
 			console.log("Successful Login");
 			profile({username: ""});
 		}, e => console.error("Login Failed"));
@@ -216,7 +224,7 @@ function logout() {
 function listBlocks(args, options) {
 	var today = new Date(),
 		blocks = args.max || 5;
-	ionCall(`/blocks/?start_date=${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`, 'GET', data => {
+	ionCall(`/blocks/?start_date=${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`, data => {
 		for (var i = 0; i < blocks; i++) {
 			var dateAr = data.results[i].date.split("-");
 			today.setFullYear(dateAr[0]);
@@ -233,7 +241,7 @@ function listBlocks(args, options) {
 
 function viewActivity(args, options) {
 	var bid = args.bid || "0";
-	ionCall(`/activities/${args.aid}/`, 'GET', data => {
+	ionCall(`/activities/${args.aid}/`, data => {
 		console.log(`${data.name}(${data.id})`);
 		console.log(data.description);
 		console.log();
@@ -255,7 +263,7 @@ function viewActivity(args, options) {
 			console.log(`${block.date} ${block.block_letter} Block (${block.id})`);
 		}
 		if (options.roster) {
-			ionCall(`/signups/scheduled_activity/${said}/`, 'GET', data => {
+			ionCall(`/signups/scheduled_activity/${said}/`, data => {
 				console.log(`Signed Up (${data.signups.count}/${data.capacity}): `);
 				data.signups.members.forEach(student => {
 					console.log(`${student.full_name} (${student.username})`);
@@ -271,14 +279,14 @@ function listActivities(args, options) {
 	if (block > -1) printActivities(block);
 	else {
 		var today = new Date();
-		ionCall(`/blocks/?start_date=${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`, 'GET', data => {
+		ionCall(`/blocks/?start_date=${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`, data => {
 			printActivities(data.results[0].id);
 		}, console.error);
 	}
 }
 
 function printActivities(bid){
-	ionCall("/blocks/" + bid + "/", 'GET', data => {
+	ionCall("/blocks/" + bid + "/", data => {
 		var dateAr = data.date.split("-"),
 			date = new Date(dateAr[0], dateAr[1] - 1, dateAr[2]);
 		console.log(`${WEEKDAYS[date.getDay()]} ${data.block_letter} Block  (${data.id})`);
@@ -299,7 +307,7 @@ function listEighth(args, options) {
 		today = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
 	console.log(today);
 
-	ionCall("/signups/user/", 'GET', data => {
+	ionCall("/signups/user/", data => {
 		data.forEach(block => {
 			if (cpgDates(block.block.date, today)) {
 				var dateAr = block.block.date.split("-"),
@@ -325,35 +333,41 @@ function signEighth(args, options) {
 	var aid = args.aid;
 	var bid = args.bid || -1;
 
-	var request = require('request');
-	var data;
+	ionCall('/signups/user', data => {
+		console.log(`Signed up for ${data.name}`);
+	}, err => {
+		console.error;
+	}, {"block": bid, "activity": aid, "use_scheduled_activity": false});
 
-	try {
-		data = fs.readFileSync(AUTHFILE, 'utf8');
-	} catch(err) {
-		if(err.code == "ENOENT"){
-			console.log("Please login first");
-		}
-		else {
-			console.error;
-		}
-		return;
-	}
+	// var request = require('request');
+	// var data;
 
-	request.post(
-		{
-			url: "https://ion.tjhsst.edu/api/signups/user",
-			headers: {
-				Authorization: `Basic ${data}`
-			},
-			form:{
-				"block": bid,
-				"activity": aid,
-				"use_scheduled_activity": false
-			},
-			json: true
-		}, (err, httpresponse, body) => {
+	// try {
+	// 	data = fs.readFileSync(AUTHFILE, 'utf8');
+	// } catch(err) {
+	// 	if(err.code == "ENOENT"){
+	// 		console.log("Please login first");
+	// 	}
+	// 	else {
+	// 		console.error;
+	// 	}
+	// 	return;
+	// }
 
-			console.log(`Signed up for ${body.name}`);
-		})
+	// request.post(
+	// 	{
+	// 		url: "https://ion.tjhsst.edu/api/signups/user",
+	// 		headers: {
+	// 			Authorization: `Basic ${data}`
+	// 		},
+	// 		form:{
+	// 			"block": bid,
+	// 			"activity": aid,
+	// 			"use_scheduled_activity": false
+	// 		},
+	// 		json: true
+	// 	}, (err, httpresponse, body) => {
+
+	// 		console.log(`Signed up for ${body.name}`);
+	// 	})
 }
