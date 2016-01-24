@@ -300,10 +300,10 @@ function listEighth(args, options) {
 
 	ionCall("/signups/user/", data => {
 		data.forEach(block => {
-			if (cpgDates(today, block.block.date)) {
+			if (cpgDates(block.block.date, today)) {
 				var dateAr = block.block.date.split("-"),
 					date = new Date(dateAr[0], dateAr[1]-1, dateAr[2]);
-				console.log(`${WEEKDAYS[date.getDay()]} ${data.block_letter} Block  (${data.id})`);
+				console.log(`${WEEKDAYS[date.getDay()]} (${block.block.id})`);
 			}
 		});
 	}, console.error);
@@ -311,9 +311,48 @@ function listEighth(args, options) {
 
 function cpgDates(d1, d2) {
 	var d1Ar = d1.split("-"), d2Ar = d2.split("-");
-	return (parseInt(d1Ar[0]) >= parseInt(d2Ar[0])) || (parseInt(d1Ar[1]) >= parseInt(d2Ar[1])) || (parseInt(d1Ar[2]) >= parseInt(d2Ar[2]));
+	if(parseInt(d1Ar[0]) < parseInt(d2Ar[0])) 
+		return false;
+	else if(parseInt(d1Ar[1]) < parseInt(d2Ar[1]))
+		return false;
+	else if(parseInt(d1Ar[2]) < parseInt(d2Ar[2]))
+		return false;
+	return true;
 }
 
 function signEighth(args, options) {
-	
+	var aid = args.aid;
+	var bid = args.bid || -1;
+
+	var request = require('request');
+	var data;
+
+	try {
+		data = fs.readFileSync(AUTHFILE, 'utf8');
+	} catch(err) {
+		if(err.code == "ENOENT"){
+			console.log("Please login first");
+		}
+		else {
+			console.error;
+		}
+		return;
+	}
+
+	request.post(
+		{
+			url: "https://ion.tjhsst.edu/api/signups/user",
+			headers: {
+				Authorization: `Basic ${data}`
+			},
+			form:{
+				"block": bid,
+				"activity": aid,
+				"use_scheduled_activity": false
+			},
+			json: true
+		}, (err, httpresponse, body) => {
+			
+			console.log(`Signed up for ${body.name}`);
+		})
 }
