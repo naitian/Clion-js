@@ -10,7 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "gitlike-cli": "^0.1.0",
-    "prompt": "^0.2.14"
+    "prompt": "^0.2.14",
+    "request": "^2.67.0"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,5 @@
   "bin": {
     "clion": "clion.js"
   },
-  "devDependencies": {
-    "request": "^2.67.0"
-  }
+  "devDependencies": {}
 }
