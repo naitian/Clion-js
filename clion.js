@@ -2,7 +2,7 @@
 const VERSION = "0.1.0",
 	DESCRIPTION = "A command line interface for TJHSST Ion",
 	WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-	AUTHFILE = require('os').tmpdir() + "/clion-auth";
+	AUTHFILE = require('path').join(__dirname, 'clion-auth');
 
 const fs = require('fs'),
 	program = require('gitlike-cli'),
