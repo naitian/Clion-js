@@ -291,33 +291,40 @@ function printActivities(bid){
 }
 
 function listEighth(args, options) {
-	console.log("Still have to figure this out");
-	process.exit();
+	console.log("--Still a little buggy--");
+	// process.exit();
 	var max = args.max || 5,
 		date = new Date(),
 		today = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
 	console.log(today);
 
 	ionCall("/signups/user/", data => {
+		data.sort((a, b) => {
+			cpDates(a.block.date, b.block.date);
+		})
+		// console.log(data);
 		data.forEach(block => {
-			if (cpgDates(block.block.date, today)) {
+			if (cpDates(block.block.date, today) <= 0) {
 				var dateAr = block.block.date.split("-"),
 					date = new Date(dateAr[0], dateAr[1]-1, dateAr[2]);
 				console.log(`${WEEKDAYS[date.getDay()]} (${block.block.id})`);
+				console.log(`\t${block.activity.title} (${block.activity.id})`);
 			}
 		});
 	}, console.error);
 }
 
-function cpgDates(d1, d2) {
+function cpDates(d1, d2) {
 	var d1Ar = d1.split("-"), d2Ar = d2.split("-");
 	if(parseInt(d1Ar[0]) < parseInt(d2Ar[0])) 
-		return false;
+		return 1;
 	else if(parseInt(d1Ar[1]) < parseInt(d2Ar[1]))
-		return false;
+		return 1;
 	else if(parseInt(d1Ar[2]) < parseInt(d2Ar[2]))
-		return false;
-	return true;
+		return 1;
+	else if(parseInt(d1Ar[2]) == parseInt(d2Ar[2]))
+		return 0;
+	else return -1;
 }
 
 function getNextBlock(callback, aid) {
@@ -331,7 +338,7 @@ function getNextBlock(callback, aid) {
 	else {
 		ionCall(`/activities/${aid}`, data => {
 			for (var bid in data.scheduled_on) {
-				if (cpgDates(data.scheduled_on[bid].date, startDate)) {
+				if (cpDates(data.scheduled_on[bid].date, startDate) <= 0) {
 					callback(aid, bid);
 				}
 			}		
