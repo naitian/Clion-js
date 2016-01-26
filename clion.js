@@ -240,7 +240,6 @@ function listBlocks(args, options) {
 }
 
 function viewActivity(args, options) {
-	var bid = args.bid || "0";
 	ionCall(`/activities/${args.aid}/`, data => {
 		console.log(`${data.name}(${data.id})`);
 		console.log(data.description);
@@ -274,15 +273,7 @@ function viewActivity(args, options) {
 }
 
 function listActivities(args, options) {
-	var block = args.bid || -1;
-
-	if (block > -1) printActivities(block);
-	else {
-		var today = new Date();
-		ionCall(`/blocks/?start_date=${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`, data => {
-			printActivities(data.results[0].id);
-		}, console.error);
-	}
+	(typeof args.bid === "undefined") ? getNextBlock(printActivities) : printActivities(bid);
 }
 
 function printActivities(bid){
@@ -329,45 +320,35 @@ function cpgDates(d1, d2) {
 	return true;
 }
 
+function getNextBlock(callback, aid) {
+	var today = new Date();
+	var startDate = today.getFullYear() + "-" + today.getMonth()+1 + "-" + today.getDate();
+	if(typeof aid === "undefined"){
+		ionCall(`/blocks/?start_date=${startDate}`, data => {
+			callback(data.results[0].id);
+		}, console.error);
+	}
+	else {
+		ionCall(`/activities/${aid}`, data => {
+			for (var bid in data.scheduled_on) {
+				if (cpgDates(data.scheduled_on[bid].date, startDate)) {
+					callback(aid, bid);
+				}
+			}		
+		}, console.error);
+	}
+
+}
+
 function signEighth(args, options) {
 	var aid = args.aid;
-	var bid = args.bid || -1;
+	(typeof bid === "undefined") ? getNextBlock(eighthSignCall, aid) : eighthSignCall(aid, bid);
+}
 
+function eighthSignCall(aid, bid) {
 	ionCall('/signups/user', data => {
 		console.log(`Signed up for ${data.name}`);
 	}, err => {
 		console.error;
 	}, {"block": bid, "activity": aid, "use_scheduled_activity": false});
-
-	// var request = require('request');
-	// var data;
-
-	// try {
-	// 	data = fs.readFileSync(AUTHFILE, 'utf8');
-	// } catch(err) {
-	// 	if(err.code == "ENOENT"){
-	// 		console.log("Please login first");
-	// 	}
-	// 	else {
-	// 		console.error;
-	// 	}
-	// 	return;
-	// }
-
-	// request.post(
-	// 	{
-	// 		url: "https://ion.tjhsst.edu/api/signups/user",
-	// 		headers: {
-	// 			Authorization: `Basic ${data}`
-	// 		},
-	// 		form:{
-	// 			"block": bid,
-	// 			"activity": aid,
-	// 			"use_scheduled_activity": false
-	// 		},
-	// 		json: true
-	// 	}, (err, httpresponse, body) => {
-
-	// 		console.log(`Signed up for ${body.name}`);
-	// 	})
 }
