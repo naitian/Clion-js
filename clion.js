@@ -291,7 +291,6 @@ function printActivities(bid){
 }
 
 function listEighth(args, options) {
-	console.log("--Still a little buggy--");
 	// process.exit();
 	var max = args.max || 5,
 		date = new Date(),
@@ -299,15 +298,12 @@ function listEighth(args, options) {
 	console.log(today);
 
 	ionCall("/signups/user/", data => {
-		data.sort((a, b) => {
-			cpDates(a.block.date, b.block.date);
-		})
 		// console.log(data);
 		data.forEach(block => {
 			if (cpDates(block.block.date, today) <= 0) {
 				var dateAr = block.block.date.split("-"),
 					date = new Date(dateAr[0], dateAr[1]-1, dateAr[2]);
-				console.log(`${WEEKDAYS[date.getDay()]} (${block.block.id})`);
+				console.log(`${WEEKDAYS[date.getDay()]} ${block.block.block_letter} (${block.block.id})`);
 				console.log(`\t${block.activity.title} (${block.activity.id})`);
 			}
 		});
