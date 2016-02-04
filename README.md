@@ -21,7 +21,7 @@ PATH=$PATH:/usr/local/share/npm/bin
 To contribute to Clion, make sure to create a global symlink to the Clion directory
 
 ```bash
-npm link /path/to/clion/
+$ npm link /path/to/clion/
 ```
 
 ## CLI Usage
