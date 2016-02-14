@@ -325,7 +325,7 @@ function cpDates(d1, d2) {
 
 function getNextBlock(callback, aid) {
 	var today = new Date();
-	var startDate = today.getFullYear() + "-" + today.getMonth()+1 + "-" + today.getDate();
+	var startDate = today.getFullYear() + "-" + (today.getMonth()+1) + "-" + today.getDate();
 	if(typeof aid === "undefined"){
 		ionCall(`/blocks/?start_date=${startDate}`, data => {
 			callback(data.results[0].id);
