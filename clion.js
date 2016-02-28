@@ -202,7 +202,7 @@ function getId(searchTerm, success) {
 	ionCall(`/search/${query.escape(searchTerm)}/`, data => {
 		if (data.count > 0) {
 			var id = data.results[0].id;
-			console.log(id);
+			// console.log(id);
 			success(id);
 		} else {
 			console.error("No Such Profile");
