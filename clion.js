@@ -7,8 +7,9 @@ const VERSION = "0.1.0",
 const fs = require('fs'),
 	program = require('gitlike-cli'),
 	request = require('request'),
-	query = require('querystring')
-	prompt = require('prompt');
+	query = require('querystring'),
+	prompt = require('prompt'),
+	colors = require('colors');
 
 prompt.message = prompt.delimiter = "";
 
@@ -148,7 +149,7 @@ function profile(args, options) {
 		var id = data || "";
 
 		ionCall(`/profile/${id}/`, data => {
-			console.log(data.full_name);
+			console.log(data.full_name.bold);
 			console.log(`${data.ion_username} (${data.id})`);
 			var bday = data.birthday || "B-Day not public";
 			var emails = data.emails || ["E-mails not public"];
@@ -167,11 +168,30 @@ function bell(args, options) {
 	ionCall(`/schedule/${date}`, data => {
 		if (date !== "") day = data;
 		else day = data.results[0];
-		console.log(day.date, `(${day.day_type.name})`);
-		day.day_type.blocks.forEach(block =>
-			console.log(block.name, `(${block.start} - ${block.end})`)
+		if(day.day_type.name.toLowerCase().indexOf("blue") != -1)
+			console.log(day.date.blue.bold, `(${day.day_type.name})`.blue.bold);
+		else if(day.day_type.name.toLowerCase().indexOf("red") != -1)
+			console.log(day.date.red.bold, `(${day.day_type.name})`.red.bold);
+		else
+			console.log(day.date.bold, `(${day.day_type.name})`.bold);
+		day.day_type.blocks.forEach(block => {
+				if(checkTime(block.start, block.end, day.date)){
+					console.log(block.name.bold, `(${block.start} - ${block.end})`.bold);
+				}
+				else
+					console.log(block.name, `(${block.start} - ${block.end})`);
+			}
 		);
 	}, console.error, false);
+}
+
+function checkTime(start, end, day) {
+	var time = new Date();
+	var startTime = new Date(day + " " + start);
+	var endTime = new Date(day + " " + end);
+	if(time.getTime() < endTime.getTime() && time.getTime() > startTime.getTime() && cpDates(`${time.getFullYear()}-${time.getMonth()+1}-${time.getDate()}`, day) === 0)
+		return true;
+	return false;
 }
 
 function getId(searchTerm, success) {
@@ -230,36 +250,42 @@ function listBlocks(args, options) {
 			today.setFullYear(dateAr[0]);
 			today.setDate(dateAr[2]);
 			today.setMonth(dateAr[1] - 1);
-			console.log(WEEKDAYS[today.getDay()], `(${data.results[i].date})`);
+			console.log(WEEKDAYS[today.getDay()].bold, `(${data.results[i].date})`.bold);
 			console.log(data.results[i].block_letter, "Block");
 			console.log("ID:", data.results[i].id);
-			console.log("Locked:", data.results[i].locked);
+			if(data.results[i].locked)
+				console.log(("Locked:", data.results[i].locked).red.bold);
 			console.log();
 		}
 	}, console.error);
 }
 
+
 function viewActivity(args, options) {
 	ionCall(`/activities/${args.aid}/`, data => {
-		console.log(`${data.name}(${data.id})`);
-		console.log(data.description);
-		console.log();
-		if (data.administrative) console.log("\tAdministrative");
-		if (data.restricted) console.log("\tRestricted");
-		if (data.presign) console.log("\tPresign");
-		if (data.sticky) console.log("\tSticky");
-		if (data.special) console.log("\tSpecial");
+		console.log(`${data.name}(${data.id})`.bold + "\n");
+		if(data.description.length > 0)
+			console.log(data.description + "\n");
+		if (data.administrative) console.log("\tAdministrative".bold);
+		if (data.restricted) console.log("\tRestricted".blue.bold);
+		if (data.presign) console.log("\tPresign".yellow.bold);
+		if (data.sticky) console.log("\tSticky".green.bold);
+		if (data.special) console.log("\tSpecial".bold);
 		console.log();
 
-		console.log("Scheduled on: ");
+		// console.log("Scheduled on (displaying nearest 5): ");
 		var first = true;
+		var ct = 0;
 		for (var blockKey in data.scheduled_on) {
 			if (first) {
 				var said = data.scheduled_on[blockKey].roster.id;
 				first = false;
 			}
+			if(ct >= 5)
+				break;
 			block = data.scheduled_on[blockKey];
-			console.log(`${block.date} ${block.block_letter} Block (${block.id})`);
+			console.log(`\t${block.date} ${block.block_letter} Block (${block.id})`);
+			ct++;
 		}
 		if (options.roster) {
 			ionCall(`/signups/scheduled_activity/${said}/`, data => {
@@ -280,12 +306,12 @@ function printActivities(bid){
 	ionCall("/blocks/" + bid + "/", data => {
 		var dateAr = data.date.split("-"),
 			date = new Date(dateAr[0], dateAr[1] - 1, dateAr[2]);
-		console.log(`${WEEKDAYS[date.getDay()]} ${data.block_letter} Block  (${data.id})`);
-		console.log(data.date);
+		console.log(`${WEEKDAYS[date.getDay()]} ${data.block_letter} Block  (${data.id})`.bold);
+		console.log(data.date.bold + "\n\n");
 		for (var akey in data.activities) {
 			var act = data.activities[akey];
-			console.log(`${act.name_with_flags_for_user} (${akey})`);
-			console.log(`\tSponsors:${act.sponsors}\n\t${act.rooms}`)
+			console.log(`${act.name_with_flags_for_user} (${akey})`.bold);
+			console.log(`\tSponsors:${act.sponsors}\n\t${act.rooms}`);
 		}
 	}, console.error);
 }
@@ -295,7 +321,7 @@ function listEighth(args, options) {
 	var max = args.max || 5,
 		date = new Date(),
 		today = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
-	console.log(today);
+	// console.log(today);
 
 	ionCall("/signups/user/", data => {
 		// console.log(data);
@@ -303,7 +329,7 @@ function listEighth(args, options) {
 			if (cpDates(block.block.date, today) <= 0) {
 				var dateAr = block.block.date.split("-"),
 					date = new Date(dateAr[0], dateAr[1]-1, dateAr[2]);
-				console.log(`${WEEKDAYS[date.getDay()]} ${block.block.block_letter} (${block.block.id})`);
+				console.log(`${WEEKDAYS[date.getDay()]} ${block.block.block_letter} (${block.block.id})`.bold);
 				console.log(`\t${block.activity.title} (${block.activity.id})`);
 			}
 		});
