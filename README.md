@@ -32,8 +32,8 @@ You can see the usage in the CLI directly by typing `clion` or `clion --help`.
 ## TODO
 - [x] 8th Period Signups
 - [X] 8th Period Activity Listings
-	- Ion doesn't sort scheduled activities yet.
-- [ ] Color output
+- [ ] Color output (partially done)
+- [ ] Change authenticaton to oauth
 
 
 Future plans include making Clion a node package, among other various features and fixes.
