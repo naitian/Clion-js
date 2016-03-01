@@ -326,11 +326,12 @@ function listEighth(args, options) {
 	ionCall("/signups/user/", data => {
 		// console.log(data);
 		data.forEach(block => {
-			if (cpDates(block.block.date, today) <= 0) {
+			if (cpDates(block.block.date, today) <= 0 && max > 0) {
+				max--;
 				var dateAr = block.block.date.split("-"),
 					date = new Date(dateAr[0], dateAr[1]-1, dateAr[2]);
-				console.log(`${WEEKDAYS[date.getDay()]} ${block.block.block_letter} (${block.block.id})`.bold);
-				console.log(`\t${block.activity.title} (${block.activity.id})`);
+				console.log(`${WEEKDAYS[date.getDay()]} ${block.block.block_letter} Block (${block.block.date})`.bold);
+				console.log(`\tBlock ID: ${block.block.id}\n\t${block.activity.title}(${block.activity.id})`);
 			}
 		});
 	}, console.error);
