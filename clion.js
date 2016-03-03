@@ -127,7 +127,7 @@ function ionCall(endpoint, success, fail, authRequired, params) {
 				console.log("Please login first");
 			}
 			else {
-				console.error;
+				console.trace("Error");
 			}
 			return;
 		}
@@ -276,9 +276,10 @@ function viewActivity(args, options) {
 		// console.log("Scheduled on (displaying nearest 5): ");
 		var first = true;
 		var ct = 0;
+		var said;
 		for (var blockKey in data.scheduled_on) {
 			if (first) {
-				var said = data.scheduled_on[blockKey].roster.id;
+				said = data.scheduled_on[blockKey].roster.id;
 				first = false;
 			}
 			if(ct >= 5)
@@ -299,7 +300,10 @@ function viewActivity(args, options) {
 }
 
 function listActivities(args, options) {
-	(typeof args.bid === "undefined") ? getNextBlock(printActivities) : printActivities(bid);
+	if(typeof args.bid === "undefined")
+		getNextBlock(printActivities);
+	else
+		printActivities(bid);
 }
 
 function printActivities(bid){
@@ -372,13 +376,16 @@ function getNextBlock(callback, aid) {
 
 function signEighth(args, options) {
 	var aid = args.aid;
-	(typeof bid === "undefined") ? getNextBlock(eighthSignCall, aid) : eighthSignCall(aid, bid);
+	if(typeof bid === "undefined")
+		getNextBlock(eighthSignCall, aid);
+	else
+		eighthSignCall(aid, bid);
 }
 
 function eighthSignCall(aid, bid) {
 	ionCall('/signups/user', data => {
 		console.log(`Signed up for ${data.name}`);
 	}, err => {
-		console.error;
+		console.trace("Error");
 	}, {"block": bid, "activity": aid, "use_scheduled_activity": false});
 }
