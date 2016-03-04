@@ -163,10 +163,11 @@ function profile(args, options) {
 }
 
 function bell(args, options) {
-	var date = args.date || "";
-
-	ionCall(`/schedule/${date}`, data => {
-		if (date !== "") day = data;
+	var date = args.date || "?page=2";
+	if(date !== "?page=2")
+		date = "/" + date;
+	ionCall(`/schedule${date}`, data => {
+		if (date !== "?page=2") day = data;
 		else day = data.results[0];
 		if(day.day_type.name.toLowerCase().indexOf("blue") != -1)
 			console.log(day.date.blue.bold, `(${day.day_type.name})`.blue.bold);
